@@ -39,6 +39,24 @@
       background-color: #555;
       transform: scale(0.98);
     }
+
+    #funBox {
+      margin-top: 40px;
+      font-size: 1.5em;
+      display: none;
+      animation: popIn 0.5s ease forwards;
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 <body>
@@ -46,7 +64,9 @@
 
   <button onclick="triggerWebhook('https://maker.ifttt.com/trigger/Testtrig/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe')">WAKE AARON UP</button>
   <button onclick="triggerWebhook('https://maker.ifttt.com/trigger/PingAaron/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe')">Quick Ping Aaron</button>
-  <button onclick="triggerWebhook('https://webhook.site/your-webhook-3')">Trigger Webhook 3</button>
+  <button onclick="doSomethingFun()">Do Something Fun</button>
+
+  <div id="funBox">🎉 Surprise! You found the hidden fun! 🎉</div>
 
   <script>
     function triggerWebhook(url) {
@@ -68,6 +88,12 @@
         console.error('Error:', error);
         alert('Error triggering webhook.');
       });
+    }
+
+    function doSomethingFun() {
+      const box = document.getElementById('funBox');
+      box.style.display = 'block';
+      box.innerText = '🎉 Surprise! You found the hidden fun! 🎉';
     }
   </script>
 </body>
