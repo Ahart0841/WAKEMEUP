@@ -2,66 +2,178 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Service termination notice</title>
+  <title>Webhook Trigger Panel</title>
   <style>
     body {
       background-color: #121212;
       color: #ffffff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
+      font-family: Arial, sans-serif;
       text-align: center;
-    }
-
-    .message-container {
-      max-width: 600px;
-      padding: 40px;
-      background-color: #1e1e1e;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+      padding-top: 100px;
     }
 
     h1 {
-      font-size: 2em;
-      margin-bottom: 20px;
+      margin-bottom: 50px;
+      font-size: 2.5em;
     }
 
-    p {
-      font-size: 1.1em;
-      line-height: 1.6;
-      opacity: 0.9;
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
     }
 
-    .extra-line {
-      margin-top: 20px;
-      font-size: 1em;
-      color: #cccccc;
-      opacity: 0.8;
+    .ready {
+      background-color: green;
     }
 
-    .signature {
-      margin-top: 30px;
-      font-size: 0.95em;
-      color: #aaaaaa;
+    .cooldown {
+      background-color: red;
+    }
+
+    #funBox {
+      margin-top: 40px;
+      font-size: 1.5em;
+      display: none;
+      animation: popIn 0.5s ease forwards;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <div class="message-container">
-    <h1>Service terminated</h1>
-    <p>
-      Sorry, I am discontinuing this service due to a lack of interest and usage.<br>
-      Thank you to everyone who supported it.
-    </p>
-    <p class="extra-line">
-      ⚠️⚠️⚠️For urgent contact needs please call or text me directly⚠️⚠️⚠️
-    </p>
-    <div class="signature">
-      – The Dev Team / Aaron
-    </div>
-  </div>
+  <h1>Webhook Trigger Panel</h1>
+
+  <button id="wakeupBtn" class="ready">WAKE AARON UP</button>
+  <button id="pingBtn" class="ready">Quick Ping Aaron</button>
+  <button onclick="doSomethingFun()">Do Something Fun</button>
+
+  <div id="funBox">🎉 Surprise! You found the hidden fun! 🎉</div>
+
+  <script>
+    const WAKEUP_URL = 'https://maker.ifttt.com/trigger/WAKEUP/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
+    const PING_URL = 'https://maker.ifttt.com/trigger/PingAaron/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
+    const cooldownKey = 'sharedCooldown';
+    const cooldownSeconds = 60;
+
+    const wakeupBtn = document.getElementById('wakeupBtn');
+    const pingBtn = document.getElementById('pingBtn');
+
+    async function getCurrentTime() {
+      try {
+        const res = await fetch('https://worldtimeapi.org/api/ip');
+        const data = await res.json();
+        return new Date(data.utc_datetime).getTime();
+      } catch {
+        return Date.now();
+      }
+    }
+
+    function triggerWebhook(url) {
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ triggered: true })
+      }).catch(console.error);
+    }
+
+    async function startCooldown(label) {
+      const now = await getCurrentTime();
+      localStorage.setItem(cooldownKey, now);
+
+      [wakeupBtn, pingBtn].forEach(btn => {
+        btn.disabled = true;
+        btn.classList.remove('ready');
+        btn.classList.add('cooldown');
+      });
+
+      let secondsLeft = cooldownSeconds;
+      wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
+      pingBtn.textContent = `Quick Ping Aaron (${secondsLeft})`;
+
+      const interval = setInterval(() => {
+        secondsLeft--;
+        wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
+        pingBtn.textContent = `Quick Ping Aaron (${secondsLeft})`;
+
+        if (secondsLeft <= 0) {
+          clearInterval(interval);
+          [wakeupBtn, pingBtn].forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('cooldown');
+            btn.classList.add('ready');
+          });
+          wakeupBtn.textContent = 'WAKE AARON UP';
+          pingBtn.textContent = 'Quick Ping Aaron';
+        }
+      }, 1000);
+    }
+
+    async function tryTrigger(type) {
+      const now = await getCurrentTime();
+      const last = parseInt(localStorage.getItem(cooldownKey) || 0);
+      if (now - last < cooldownSeconds * 1000) return;
+
+      if (type === 'wakeup') triggerWebhook(WAKEUP_URL);
+      if (type === 'ping') triggerWebhook(PING_URL);
+
+      startCooldown(type === 'wakeup' ? 'WAKE AARON UP' : 'Quick Ping Aaron');
+    }
+
+    function doSomethingFun() {
+      const box = document.getElementById('funBox');
+      box.style.display = 'block';
+      box.innerText = '🎉HEYYYY YASMIN LOL🎉';
+    }
+
+    wakeupBtn.onclick = () => tryTrigger('wakeup');
+    pingBtn.onclick = () => tryTrigger('ping');
+
+    async function restoreCooldown() {
+      const now = await getCurrentTime();
+      const last = parseInt(localStorage.getItem(cooldownKey) || 0);
+      const elapsed = now - last;
+
+      if (elapsed < cooldownSeconds * 1000) {
+        let remaining = Math.ceil((cooldownSeconds * 1000 - elapsed) / 1000);
+
+        [wakeupBtn, pingBtn].forEach(btn => {
+          btn.disabled = true;
+          btn.classList.remove('ready');
+          btn.classList.add('cooldown');
+        });
+
+        wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
+        pingBtn.textContent = `Quick Ping Aaron (${remaining})`;
+
+        const interval = setInterval(() => {
+          remaining--;
+          wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
+          pingBtn.textContent = `Quick Ping Aaron (${remaining})`;
+
+          if (remaining <= 0) {
+            clearInterval(interval);
+            [wakeupBtn, pingBtn].forEach(btn => {
+              btn.disabled = false;
+              btn.classList.remove('cooldown');
+              btn.classList.add('ready');
+            });
+            wakeupBtn.textContent = 'WAKE AARON UP';
+            pingBtn.textContent = 'Quick Ping Aaron';
+          }
+        }, 1000);
+      }
+    }
+
+    restoreCooldown();
+  </script>
 </body>
 </html>
