@@ -1,179 +1,104 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Wake Me Up</title>
-  <style>
-    body {
-      background-color: #121212;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding-top: 100px;
+<script>
+  const WAKEUP_URL = 'https://maker.ifttt.com/trigger/WAKEUP/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
+  const PING_URL = 'https://maker.ifttt.com/trigger/shut down/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
+  const cooldownKey = 'sharedCooldown';
+  const cooldownSeconds = 60;
+
+  const wakeupBtn = document.getElementById('wakeupBtn');
+  const pingBtn = document.getElementById('pingBtn');
+
+  async function getCurrentTime() {
+    try {
+      const res = await fetch('https://worldtimeapi.org/api/ip');
+      const data = await res.json();
+      return new Date(data.utc_datetime).getTime();
+    } catch {
+      return Date.now();
     }
+  }
 
-    h1 {
-      margin-bottom: 50px;
-      font-size: 2.5em;
-    }
+  function triggerWebhook(url) {
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ triggered: true })
+    }).catch(console.error);
+  }
 
-    button {
-      border: none;
-      border-radius: 8px;
-      padding: 15px 30px;
-      margin: 10px;
-      font-size: 1.2em;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      color: white;
-    }
+  async function startCooldown() {
+    const now = await getCurrentTime();
+    localStorage.setItem(cooldownKey, now);
 
-    .ready {
-      background-color: green;
-    }
+    wakeupBtn.disabled = true;
+    wakeupBtn.classList.remove('ready');
+    wakeupBtn.classList.add('cooldown');
 
-    .cooldown {
-      background-color: red;
-    }
+    let secondsLeft = cooldownSeconds;
+    wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
 
-    #funBox {
-      margin-top: 40px;
-      font-size: 1.5em;
-      display: none;
-      animation: popIn 0.5s ease forwards;
-    }
-
-    @keyframes popIn {
-      0% { transform: scale(0); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-  </style>
-</head>
-<body>
-  <h1>Webhook Trigger Panel</h1>
-
-  <button id="wakeupBtn" class="ready">WAKE AARON UP</button>
-  <button id="pingBtn" class="ready">Quick Ping Aaron</button>
-  <button onclick="doSomethingFun()">Do Something Fun</button>
-
-  <div id="funBox">🎉 Surprise! You found the hidden fun! 🎉</div>
-
-  <script>
-    const WAKEUP_URL = 'https://maker.ifttt.com/trigger/WAKEUP/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
-    const PING_URL = 'https://maker.ifttt.com/trigger/shut down/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
-    const cooldownKey = 'sharedCooldown';
-    const cooldownSeconds = 60;
-
-    const wakeupBtn = document.getElementById('wakeupBtn');
-    const pingBtn = document.getElementById('pingBtn');
-
-    async function getCurrentTime() {
-      try {
-        const res = await fetch('https://worldtimeapi.org/api/ip');
-        const data = await res.json();
-        return new Date(data.utc_datetime).getTime();
-      } catch {
-        return Date.now();
-      }
-    }
-
-    function triggerWebhook(url) {
-      fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ triggered: true })
-      }).catch(console.error);
-    }
-
-    async function startCooldown(label) {
-      const now = await getCurrentTime();
-      localStorage.setItem(cooldownKey, now);
-
-      [wakeupBtn, pingBtn].forEach(btn => {
-        btn.disabled = true;
-        btn.classList.remove('ready');
-        btn.classList.add('cooldown');
-      });
-
-      let secondsLeft = cooldownSeconds;
+    const interval = setInterval(() => {
+      secondsLeft--;
       wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
-      pingBtn.textContent = `STOP SOUND OVR (${secondsLeft})`;
 
-      const interval = setInterval(() => {
-        secondsLeft--;
-        wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
-        pingBtn.textContent = `STOP SOUND OVR (${secondsLeft})`;
+      if (secondsLeft <= 0) {
+        clearInterval(interval);
+        wakeupBtn.disabled = false;
+        wakeupBtn.classList.remove('cooldown');
+        wakeupBtn.classList.add('ready');
+        wakeupBtn.textContent = 'WAKE AARON UP';
+      }
+    }, 1000);
+  }
 
-        if (secondsLeft <= 0) {
-          clearInterval(interval);
-          [wakeupBtn, pingBtn].forEach(btn => {
-            btn.disabled = false;
-            btn.classList.remove('cooldown');
-            btn.classList.add('ready');
-          });
-          wakeupBtn.textContent = 'WAKE AARON UP';
-          pingBtn.textContent = 'STOP SOUND OVR';
-        }
-      }, 1000);
-    }
-
-    async function tryTrigger(type) {
+  async function tryTrigger(type) {
+    if (type === 'wakeup') {
       const now = await getCurrentTime();
       const last = parseInt(localStorage.getItem(cooldownKey) || 0);
       if (now - last < cooldownSeconds * 1000) return;
 
-      if (type === 'wakeup') triggerWebhook(WAKEUP_URL);
-      if (type === 'ping') triggerWebhook(PING_URL);
-
-      startCooldown(type === 'wakeup' ? 'WAKE AARON UP' : 'STOP SOUND OVR');
+      triggerWebhook(WAKEUP_URL);
+      startCooldown();
+    } else if (type === 'ping') {
+      triggerWebhook(PING_URL); // No cooldown for this
     }
+  }
 
-    function doSomethingFun() {
-      const box = document.getElementById('funBox');
-      box.style.display = 'block';
-      box.innerText = '🎉HEYYYY YASMIN LOL🎉';
-    }
+  function doSomethingFun() {
+    const box = document.getElementById('funBox');
+    box.style.display = 'block';
+    box.innerText = '🎉HEYYYY YASMIN LOL🎉';
+  }
 
-    wakeupBtn.onclick = () => tryTrigger('wakeup');
-    pingBtn.onclick = () => tryTrigger('STOP');
+  wakeupBtn.onclick = () => tryTrigger('wakeup');
+  pingBtn.onclick = () => tryTrigger('ping');
 
-    async function restoreCooldown() {
-      const now = await getCurrentTime();
-      const last = parseInt(localStorage.getItem(cooldownKey) || 0);
-      const elapsed = now - last;
+  async function restoreCooldown() {
+    const now = await getCurrentTime();
+    const last = parseInt(localStorage.getItem(cooldownKey) || 0);
+    const elapsed = now - last;
 
-      if (elapsed < cooldownSeconds * 1000) {
-        let remaining = Math.ceil((cooldownSeconds * 1000 - elapsed) / 1000);
+    if (elapsed < cooldownSeconds * 1000) {
+      let remaining = Math.ceil((cooldownSeconds * 1000 - elapsed) / 1000);
 
-        [wakeupBtn, pingBtn].forEach(btn => {
-          btn.disabled = true;
-          btn.classList.remove('ready');
-          btn.classList.add('cooldown');
-        });
+      wakeupBtn.disabled = true;
+      wakeupBtn.classList.remove('ready');
+      wakeupBtn.classList.add('cooldown');
+      wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
 
+      const interval = setInterval(() => {
+        remaining--;
         wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
-        pingBtn.textContent = `STOP SOUND OVR (${remaining})`;
 
-        const interval = setInterval(() => {
-          remaining--;
-          wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
-          pingBtn.textContent = `STOP SOUND OVR (${remaining})`;
-
-          if (remaining <= 0) {
-            clearInterval(interval);
-            [wakeupBtn, pingBtn].forEach(btn => {
-              btn.disabled = false;
-              btn.classList.remove('cooldown');
-              btn.classList.add('ready');
-            });
-            wakeupBtn.textContent = 'WAKE AARON UP';
-            pingBtn.textContent = 'STOP SOUND OVR';
-          }
-        }, 1000);
-      }
+        if (remaining <= 0) {
+          clearInterval(interval);
+          wakeupBtn.disabled = false;
+          wakeupBtn.classList.remove('cooldown');
+          wakeupBtn.classList.add('ready');
+          wakeupBtn.textContent = 'WAKE AARON UP';
+        }
+      }, 1000);
     }
+  }
 
-    restoreCooldown();
-  </script>
-</body>
-</html>
+  restoreCooldown();
+</script>
