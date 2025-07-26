@@ -97,12 +97,12 @@
 
       let secondsLeft = cooldownSeconds;
       wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
-      pingBtn.textContent = `Quick Ping Aaron (${secondsLeft})`;
+      pingBtn.textContent = `SILENCE ALARM (${secondsLeft})`;
 
       const interval = setInterval(() => {
         secondsLeft--;
         wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
-        pingBtn.textContent = `Quick Ping Aaron (${secondsLeft})`;
+        pingBtn.textContent = `SILENCE ALARM (${secondsLeft})`;
 
         if (secondsLeft <= 0) {
           clearInterval(interval);
@@ -112,7 +112,7 @@
             btn.classList.add('ready');
           });
           wakeupBtn.textContent = 'WAKE AARON UP';
-          pingBtn.textContent = 'Quick Ping Aaron';
+          pingBtn.textContent = 'SILENCE ALARM';
         }
       }, 1000);
     }
@@ -125,7 +125,7 @@
       if (type === 'wakeup') triggerWebhook(WAKEUP_URL);
       if (type === 'ping') triggerWebhook(PING_URL);
 
-      startCooldown(type === 'wakeup' ? 'WAKE AARON UP' : 'Quick Ping Aaron');
+      startCooldown(type === 'wakeup' ? 'WAKE AARON UP' : 'SILENCE ALARM');
     }
 
     function doSomethingFun() {
@@ -152,12 +152,12 @@
         });
 
         wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
-        pingBtn.textContent = `Quick Ping Aaron (${remaining})`;
+        pingBtn.textContent = `SILENCE ALARM (${remaining})`;
 
         const interval = setInterval(() => {
           remaining--;
           wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
-          pingBtn.textContent = `Quick Ping Aaron (${remaining})`;
+          pingBtn.textContent = `SILENCE ALARM (${remaining})`;
 
           if (remaining <= 0) {
             clearInterval(interval);
@@ -167,7 +167,7 @@
               btn.classList.add('ready');
             });
             wakeupBtn.textContent = 'WAKE AARON UP';
-            pingBtn.textContent = 'Quick Ping Aaron';
+            pingBtn.textContent = 'SILENCE ALARM';
           }
         }, 1000);
       }
