@@ -1,95 +1,88 @@
-<script>
-  const WAKEUP_URL = 'https://maker.ifttt.com/trigger/WAKEUP/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
-  const PING_URL = 'https://maker.ifttt.com/trigger/shut down/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
-  const cooldownKey = 'sharedCooldown';
-  const cooldownSeconds = 60;
-
-  const wakeupBtn = document.getElementById('wakeupBtn');
-  const pingBtn = document.getElementById('pingBtn');
-
-  async function getCurrentTime() {
-    try {
-      const res = await fetch('https://worldtimeapi.org/api/ip');
-      const data = await res.json();
-      return new Date(data.utc_datetime).getTime();
-    } catch {
-      return Date.now();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wake Me Up</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 100px;
     }
-  }
 
-  function triggerWebhook(url) {
-    fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ triggered: true })
-    }).catch(console.error);
-  }
+    h1 {
+      margin-bottom: 50px;
+      font-size: 2.5em;
+    }
 
-  async function startCooldown() {
-    const now = await getCurrentTime();
-    localStorage.setItem(cooldownKey, now);
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+    }
 
-    wakeupBtn.disabled = true;
-    wakeupBtn.classList.remove('ready');
-    wakeupBtn.classList.add('cooldown');
+    .ready {
+      background-color: green;
+    }
 
-    let secondsLeft = cooldownSeconds;
-    wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
+    .cooldown {
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Webhook Trigger Panel</h1>
 
-    const interval = setInterval(() => {
-      secondsLeft--;
-      wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
+  <button id="wakeupBtn" class="ready">WAKE AARON UP</button>
 
-      if (secondsLeft <= 0) {
-        clearInterval(interval);
-        wakeupBtn.disabled = false;
-        wakeupBtn.classList.remove('cooldown');
-        wakeupBtn.classList.add('ready');
-        wakeupBtn.textContent = 'WAKE AARON UP';
+  <script>
+    const WAKEUP_URL = 'https://maker.ifttt.com/trigger/WAKEUP/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
+    const cooldownKey = 'sharedCooldown';
+    const cooldownSeconds = 60;
+
+    const wakeupBtn = document.getElementById('wakeupBtn');
+
+    async function getCurrentTime() {
+      try {
+        const res = await fetch('https://worldtimeapi.org/api/ip');
+        const data = await res.json();
+        return new Date(data.utc_datetime).getTime();
+      } catch {
+        return Date.now();
       }
-    }, 1000);
-  }
-
-  async function tryTrigger(type) {
-    if (type === 'wakeup') {
-      const now = await getCurrentTime();
-      const last = parseInt(localStorage.getItem(cooldownKey) || 0);
-      if (now - last < cooldownSeconds * 1000) return;
-
-      triggerWebhook(WAKEUP_URL);
-      startCooldown();
-    } else if (type === 'ping') {
-      triggerWebhook(PING_URL); // No cooldown for this
     }
-  }
 
-  function doSomethingFun() {
-    const box = document.getElementById('funBox');
-    box.style.display = 'block';
-    box.innerText = '🎉HEYYYY YASMIN LOL🎉';
-  }
+    function triggerWebhook(url) {
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ triggered: true })
+      }).catch(console.error);
+    }
 
-  wakeupBtn.onclick = () => tryTrigger('wakeup');
-  pingBtn.onclick = () => tryTrigger('ping');
-
-  async function restoreCooldown() {
-    const now = await getCurrentTime();
-    const last = parseInt(localStorage.getItem(cooldownKey) || 0);
-    const elapsed = now - last;
-
-    if (elapsed < cooldownSeconds * 1000) {
-      let remaining = Math.ceil((cooldownSeconds * 1000 - elapsed) / 1000);
+    async function startCooldown() {
+      const now = await getCurrentTime();
+      localStorage.setItem(cooldownKey, now);
 
       wakeupBtn.disabled = true;
       wakeupBtn.classList.remove('ready');
       wakeupBtn.classList.add('cooldown');
-      wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
+
+      let secondsLeft = cooldownSeconds;
+      wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
 
       const interval = setInterval(() => {
-        remaining--;
-        wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
+        secondsLeft--;
+        wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
 
-        if (remaining <= 0) {
+        if (secondsLeft <= 0) {
           clearInterval(interval);
           wakeupBtn.disabled = false;
           wakeupBtn.classList.remove('cooldown');
@@ -98,7 +91,46 @@
         }
       }, 1000);
     }
-  }
 
-  restoreCooldown();
-</script>
+    async function tryTrigger() {
+      const now = await getCurrentTime();
+      const last = parseInt(localStorage.getItem(cooldownKey) || 0);
+      if (now - last < cooldownSeconds * 1000) return;
+
+      triggerWebhook(WAKEUP_URL);
+      startCooldown();
+    }
+
+    async function restoreCooldown() {
+      const now = await getCurrentTime();
+      const last = parseInt(localStorage.getItem(cooldownKey) || 0);
+      const elapsed = now - last;
+
+      if (elapsed < cooldownSeconds * 1000) {
+        let remaining = Math.ceil((cooldownSeconds * 1000 - elapsed) / 1000);
+
+        wakeupBtn.disabled = true;
+        wakeupBtn.classList.remove('ready');
+        wakeupBtn.classList.add('cooldown');
+        wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
+
+        const interval = setInterval(() => {
+          remaining--;
+          wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
+
+          if (remaining <= 0) {
+            clearInterval(interval);
+            wakeupBtn.disabled = false;
+            wakeupBtn.classList.remove('cooldown');
+            wakeupBtn.classList.add('ready');
+            wakeupBtn.textContent = 'WAKE AARON UP';
+          }
+        }, 1000);
+      }
+    }
+
+    wakeupBtn.onclick = () => tryTrigger();
+    restoreCooldown();
+  </script>
+</body>
+</html>
