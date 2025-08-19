@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Webhook Trigger Panel</title>
+  <title>Wake Me Up</title>
   <style>
     body {
       background-color: #121212;
@@ -35,37 +35,19 @@
     .cooldown {
       background-color: red;
     }
-
-    #funBox {
-      margin-top: 40px;
-      font-size: 1.5em;
-      display: none;
-      animation: popIn 0.5s ease forwards;
-    }
-
-    @keyframes popIn {
-      0% { transform: scale(0); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
   </style>
 </head>
 <body>
   <h1>Webhook Trigger Panel</h1>
 
   <button id="wakeupBtn" class="ready">WAKE AARON UP</button>
-  <button id="pingBtn" class="ready">Quick Ping Aaron</button>
-  <button onclick="doSomethingFun()">Do Something Fun</button>
-
-  <div id="funBox">🎉 Surprise! You found the hidden fun! 🎉</div>
 
   <script>
     const WAKEUP_URL = 'https://maker.ifttt.com/trigger/WAKEUP/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
-    const PING_URL = 'https://maker.ifttt.com/trigger/PingAaron/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
     const cooldownKey = 'sharedCooldown';
     const cooldownSeconds = 60;
 
     const wakeupBtn = document.getElementById('wakeupBtn');
-    const pingBtn = document.getElementById('pingBtn');
 
     async function getCurrentTime() {
       try {
@@ -85,57 +67,39 @@
       }).catch(console.error);
     }
 
-    async function startCooldown(label) {
+    async function startCooldown() {
       const now = await getCurrentTime();
       localStorage.setItem(cooldownKey, now);
 
-      [wakeupBtn, pingBtn].forEach(btn => {
-        btn.disabled = true;
-        btn.classList.remove('ready');
-        btn.classList.add('cooldown');
-      });
+      wakeupBtn.disabled = true;
+      wakeupBtn.classList.remove('ready');
+      wakeupBtn.classList.add('cooldown');
 
       let secondsLeft = cooldownSeconds;
       wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
-      pingBtn.textContent = `Quick Ping Aaron (${secondsLeft})`;
 
       const interval = setInterval(() => {
         secondsLeft--;
         wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
-        pingBtn.textContent = `Quick Ping Aaron (${secondsLeft})`;
 
         if (secondsLeft <= 0) {
           clearInterval(interval);
-          [wakeupBtn, pingBtn].forEach(btn => {
-            btn.disabled = false;
-            btn.classList.remove('cooldown');
-            btn.classList.add('ready');
-          });
+          wakeupBtn.disabled = false;
+          wakeupBtn.classList.remove('cooldown');
+          wakeupBtn.classList.add('ready');
           wakeupBtn.textContent = 'WAKE AARON UP';
-          pingBtn.textContent = 'Quick Ping Aaron';
         }
       }, 1000);
     }
 
-    async function tryTrigger(type) {
+    async function tryTrigger() {
       const now = await getCurrentTime();
       const last = parseInt(localStorage.getItem(cooldownKey) || 0);
       if (now - last < cooldownSeconds * 1000) return;
 
-      if (type === 'wakeup') triggerWebhook(WAKEUP_URL);
-      if (type === 'ping') triggerWebhook(PING_URL);
-
-      startCooldown(type === 'wakeup' ? 'WAKE AARON UP' : 'Quick Ping Aaron');
+      triggerWebhook(WAKEUP_URL);
+      startCooldown();
     }
-
-    function doSomethingFun() {
-      const box = document.getElementById('funBox');
-      box.style.display = 'block';
-      box.innerText = '🎉HEYYYY YASMIN LOL🎉';
-    }
-
-    wakeupBtn.onclick = () => tryTrigger('wakeup');
-    pingBtn.onclick = () => tryTrigger('ping');
 
     async function restoreCooldown() {
       const now = await getCurrentTime();
@@ -145,34 +109,27 @@
       if (elapsed < cooldownSeconds * 1000) {
         let remaining = Math.ceil((cooldownSeconds * 1000 - elapsed) / 1000);
 
-        [wakeupBtn, pingBtn].forEach(btn => {
-          btn.disabled = true;
-          btn.classList.remove('ready');
-          btn.classList.add('cooldown');
-        });
-
+        wakeupBtn.disabled = true;
+        wakeupBtn.classList.remove('ready');
+        wakeupBtn.classList.add('cooldown');
         wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
-        pingBtn.textContent = `Quick Ping Aaron (${remaining})`;
 
         const interval = setInterval(() => {
           remaining--;
           wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
-          pingBtn.textContent = `Quick Ping Aaron (${remaining})`;
 
           if (remaining <= 0) {
             clearInterval(interval);
-            [wakeupBtn, pingBtn].forEach(btn => {
-              btn.disabled = false;
-              btn.classList.remove('cooldown');
-              btn.classList.add('ready');
-            });
+            wakeupBtn.disabled = false;
+            wakeupBtn.classList.remove('cooldown');
+            wakeupBtn.classList.add('ready');
             wakeupBtn.textContent = 'WAKE AARON UP';
-            pingBtn.textContent = 'Quick Ping Aaron';
           }
         }, 1000);
       }
     }
 
+    wakeupBtn.onclick = () => tryTrigger();
     restoreCooldown();
   </script>
 </body>
