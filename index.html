@@ -35,47 +35,27 @@
     .cooldown {
       background-color: red;
     }
-
-    #funBox {
-      margin-top: 40px;
-      font-size: 1.5em;
-      display: none;
-      animation: popIn 0.5s ease forwards;
-    }
-
-    @keyframes popIn {
-      0% { transform: scale(0); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
   </style>
 </head>
 <body>
   <h1>Webhook Trigger Panel</h1>
 
   <button id="wakeupBtn" class="ready">WAKE AARON UP</button>
-  <button id="pingBtn" class="ready">Quick Ping Aaron</button>
-  <button onclick="doSomethingFun()">Do Something Fun</button>
-
-  <div id="funBox">🎉 Surprise! You found the hidden fun! 🎉</div>
+  <button id="coffeeBtn" class="ready">Ping Aaron</button>
+  <button id="surpriseBtn" class="ready">SILENCE/OVERIDE</button>
 
   <script>
+    // Webhook URLs (customize each one)
     const WAKEUP_URL = 'https://maker.ifttt.com/trigger/WAKEUP/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
-    const PING_URL = 'https://maker.ifttt.com/trigger/PingAaron/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
-    const cooldownKey = 'sharedCooldown';
-    const cooldownSeconds = 60;
+    const COFFEE_URL = 'https://maker.ifttt.com/trigger/PingAaron/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
+    const SURPRISE_URL = 'https://maker.ifttt.com/trigger/EMERGOVR/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
 
+    const cooldownSeconds = 5; // reduced from 60 → 5
+
+    // Buttons
     const wakeupBtn = document.getElementById('wakeupBtn');
-    const pingBtn = document.getElementById('pingBtn');
-
-    async function getCurrentTime() {
-      try {
-        const res = await fetch('https://worldtimeapi.org/api/ip');
-        const data = await res.json();
-        return new Date(data.utc_datetime).getTime();
-      } catch {
-        return Date.now();
-      }
-    }
+    const coffeeBtn = document.getElementById('coffeeBtn');
+    const surpriseBtn = document.getElementById('surpriseBtn');
 
     function triggerWebhook(url) {
       fetch(url, {
@@ -85,95 +65,39 @@
       }).catch(console.error);
     }
 
-    async function startCooldown(label) {
-      const now = await getCurrentTime();
-      localStorage.setItem(cooldownKey, now);
-
-      [wakeupBtn, pingBtn].forEach(btn => {
-        btn.disabled = true;
-        btn.classList.remove('ready');
-        btn.classList.add('cooldown');
-      });
+    function startCooldown(button, label) {
+      button.disabled = true;
+      button.classList.remove('ready');
+      button.classList.add('cooldown');
 
       let secondsLeft = cooldownSeconds;
-      wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
-      pingBtn.textContent = `Quick Ping Aaron (${secondsLeft})`;
+      button.textContent = `${label} (${secondsLeft})`;
 
       const interval = setInterval(() => {
         secondsLeft--;
-        wakeupBtn.textContent = `WAKE AARON UP (${secondsLeft})`;
-        pingBtn.textContent = `Quick Ping Aaron (${secondsLeft})`;
+        button.textContent = `${label} (${secondsLeft})`;
 
         if (secondsLeft <= 0) {
           clearInterval(interval);
-          [wakeupBtn, pingBtn].forEach(btn => {
-            btn.disabled = false;
-            btn.classList.remove('cooldown');
-            btn.classList.add('ready');
-          });
-          wakeupBtn.textContent = 'WAKE AARON UP';
-          pingBtn.textContent = 'Quick Ping Aaron';
+          button.disabled = false;
+          button.classList.remove('cooldown');
+          button.classList.add('ready');
+          button.textContent = label;
         }
       }, 1000);
     }
 
-    async function tryTrigger(type) {
-      const now = await getCurrentTime();
-      const last = parseInt(localStorage.getItem(cooldownKey) || 0);
-      if (now - last < cooldownSeconds * 1000) return;
-
-      if (type === 'wakeup') triggerWebhook(WAKEUP_URL);
-      if (type === 'ping') triggerWebhook(PING_URL);
-
-      startCooldown(type === 'wakeup' ? 'WAKE AARON UP' : 'Quick Ping Aaron');
+    function setupButton(button, label, url) {
+      button.onclick = () => {
+        triggerWebhook(url);
+        startCooldown(button, label);
+      };
     }
 
-    function doSomethingFun() {
-      const box = document.getElementById('funBox');
-      box.style.display = 'block';
-      box.innerText = '🎉HEYYYY YASMIN LOL🎉';
-    }
-
-    wakeupBtn.onclick = () => tryTrigger('wakeup');
-    pingBtn.onclick = () => tryTrigger('ping');
-
-    async function restoreCooldown() {
-      const now = await getCurrentTime();
-      const last = parseInt(localStorage.getItem(cooldownKey) || 0);
-      const elapsed = now - last;
-
-      if (elapsed < cooldownSeconds * 1000) {
-        let remaining = Math.ceil((cooldownSeconds * 1000 - elapsed) / 1000);
-
-        [wakeupBtn, pingBtn].forEach(btn => {
-          btn.disabled = true;
-          btn.classList.remove('ready');
-          btn.classList.add('cooldown');
-        });
-
-        wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
-        pingBtn.textContent = `Quick Ping Aaron (${remaining})`;
-
-        const interval = setInterval(() => {
-          remaining--;
-          wakeupBtn.textContent = `WAKE AARON UP (${remaining})`;
-          pingBtn.textContent = `Quick Ping Aaron (${remaining})`;
-
-          if (remaining <= 0) {
-            clearInterval(interval);
-            [wakeupBtn, pingBtn].forEach(btn => {
-              btn.disabled = false;
-              btn.classList.remove('cooldown');
-              btn.classList.add('ready');
-            });
-            wakeupBtn.textContent = 'WAKE AARON UP';
-            pingBtn.textContent = 'Quick Ping Aaron';
-          }
-        }, 1000);
-      }
-    }
-
-    restoreCooldown();
+    // Attach all 3 buttons
+    setupButton(wakeupBtn, "WAKE AARON UP", WAKEUP_URL);
+    setupButton(coffeeBtn, "MAKE COFFEE", COFFEE_URL);
+    setupButton(surpriseBtn, "SURPRISE", SURPRISE_URL);
   </script>
 </body>
 </html>
