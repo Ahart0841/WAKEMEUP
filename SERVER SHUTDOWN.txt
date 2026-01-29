@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Service Notice</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+
+    .message-container {
+      max-width: 600px;
+      padding: 40px;
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 1.1em;
+      line-height: 1.6;
+      opacity: 0.9;
+    }
+
+    .signature {
+      margin-top: 30px;
+      font-size: 0.95em;
+      color: #aaaaaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="message-container">
+    <h1>Service Discontinued</h1>
+    <p>
+      Sorry, I am discontinuing this service due to a lack of interest and usage.<br>
+      Thank you to everyone who supported it.
+    </p>
+    <div class="signature">
+      – The Dev Team / Aaron
+    </div>
+  </div>
+</body>
+</html>

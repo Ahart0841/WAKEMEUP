@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wake up aaron</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+
+    h1 {
+      margin-bottom: 50px;
+      font-size: 2.5em;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+    }
+
+    .ready {
+      background-color: green;
+    }
+
+    .cooldown {
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Webhook Trigger Panel</h1>
+
+  <button id="wakeupBtn" class="ready">WAKE AARON UP</button>
+  <button id="coffeeBtn" class="ready">Ping Aaron</button>
+  <button id="surpriseBtn" class="ready">SILENCE/OVERIDE</button>
+
+  <script>
+    // Webhook URLs (customize each one)
+    const WAKEUP_URL = 'https://maker.ifttt.com/trigger/WAKEUP/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
+    const COFFEE_URL = 'https://maker.ifttt.com/trigger/PingAaron/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
+    const SURPRISE_URL = 'https://maker.ifttt.com/trigger/EMERGOVR/with/key/hnISI0zYilbKIora8FUlDhrW3VN2JZM4ibrsaCTYrhe';
+
+    const cooldownSeconds = 5; // reduced from 60 → 5
+
+    // Buttons
+    const wakeupBtn = document.getElementById('wakeupBtn');
+    const coffeeBtn = document.getElementById('coffeeBtn');
+    const surpriseBtn = document.getElementById('surpriseBtn');
+
+    function triggerWebhook(url) {
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ triggered: true })
+      }).catch(console.error);
+    }
+
+    function startCooldown(button, label) {
+      button.disabled = true;
+      button.classList.remove('ready');
+      button.classList.add('cooldown');
+
+      let secondsLeft = cooldownSeconds;
+      button.textContent = `${label} (${secondsLeft})`;
+
+      const interval = setInterval(() => {
+        secondsLeft--;
+        button.textContent = `${label} (${secondsLeft})`;
+
+        if (secondsLeft <= 0) {
+          clearInterval(interval);
+          button.disabled = false;
+          button.classList.remove('cooldown');
+          button.classList.add('ready');
+          button.textContent = label;
+        }
+      }, 1000);
+    }
+
+    function setupButton(button, label, url) {
+      button.onclick = () => {
+        triggerWebhook(url);
+        startCooldown(button, label);
+      };
+    }
+
+    // Attach all 3 buttons
+    setupButton(wakeupBtn, "WAKE AARON UP", WAKEUP_URL);
+    setupButton(coffeeBtn, "MAKE COFFEE", COFFEE_URL);
+    setupButton(surpriseBtn, "SURPRISE", SURPRISE_URL);
+  </script>
+</body>
+</html>
+
