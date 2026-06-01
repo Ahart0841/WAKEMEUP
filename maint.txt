@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maintenance Mode</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    height:100vh;
+    overflow:hidden;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:
+        radial-gradient(circle at top, #1f1f4a 0%, #090909 40%),
+        #000;
+    font-family:'Orbitron', sans-serif;
+    color:white;
+}
+
+/* Animated background */
+body::before{
+    content:'';
+    position:absolute;
+    width:200%;
+    height:200%;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 60px,
+            rgba(0,255,255,.03) 60px,
+            rgba(0,255,255,.03) 62px
+        );
+    animation: moveGrid 12s linear infinite;
+}
+
+@keyframes moveGrid{
+    from{transform:translateY(0);}
+    to{transform:translateY(-100px);}
+}
+
+/* Floating glow orbs */
+.orb{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(80px);
+    opacity:.4;
+}
+
+.orb1{
+    width:300px;
+    height:300px;
+    background:#00ffff;
+    top:10%;
+    left:10%;
+}
+
+.orb2{
+    width:400px;
+    height:400px;
+    background:#7b2cff;
+    bottom:5%;
+    right:5%;
+}
+
+.container{
+    position:relative;
+    z-index:10;
+    width:min(90%, 850px);
+    padding:60px;
+    text-align:center;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:30px;
+    box-shadow:
+        0 0 50px rgba(0,255,255,.15),
+        inset 0 0 20px rgba(255,255,255,.05);
+}
+
+.status{
+    display:inline-block;
+    padding:10px 20px;
+    border-radius:999px;
+    background:rgba(255,80,80,.15);
+    border:1px solid rgba(255,80,80,.4);
+    color:#ff6b6b;
+    font-size:.8rem;
+    letter-spacing:2px;
+    margin-bottom:25px;
+    animation:pulse 2s infinite;
+}
+
+@keyframes pulse{
+    0%,100%{box-shadow:0 0 0 rgba(255,80,80,0);}
+    50%{box-shadow:0 0 30px rgba(255,80,80,.5);}
+}
+
+h1{
+    font-size:clamp(3rem,8vw,6rem);
+    font-weight:900;
+    line-height:1;
+    text-transform:uppercase;
+    margin-bottom:25px;
+    background:linear-gradient(
+        90deg,
+        #00ffff,
+        #7b2cff,
+        #00ffff
+    );
+    background-size:300%;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:gradientMove 5s linear infinite;
+}
+
+@keyframes gradientMove{
+    to{
+        background-position:300%;
+    }
+}
+
+.subtitle{
+    color:#cfcfcf;
+    font-size:1.15rem;
+    line-height:1.8;
+    max-width:650px;
+    margin:auto;
+}
+
+.progress-wrapper{
+    margin-top:40px;
+}
+
+.progress-text{
+    margin-bottom:15px;
+    color:#9f9f9f;
+    letter-spacing:2px;
+    font-size:.9rem;
+}
+
+.progress{
+    height:12px;
+    border-radius:999px;
+    overflow:hidden;
+    background:rgba(255,255,255,.08);
+}
+
+.progress-bar{
+    height:100%;
+    width:72%;
+    background:linear-gradient(
+        90deg,
+        #00ffff,
+        #7b2cff
+    );
+    box-shadow:
+        0 0 20px #00ffff,
+        0 0 40px #7b2cff;
+    animation:shine 2s linear infinite;
+}
+
+@keyframes shine{
+    0%{filter:brightness(1);}
+    50%{filter:brightness(1.5);}
+    100%{filter:brightness(1);}
+}
+
+.footer{
+    margin-top:35px;
+    color:#8f8f8f;
+    font-size:.9rem;
+    letter-spacing:1px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="container">
+
+    <div class="status">
+        ● SYSTEM MAINTENANCE
+    </div>
+
+    <h1>WE'RE UPGRADING</h1>
+
+    <p class="subtitle">
+        Our systems are currently undergoing a major upgrade.
+        We're deploying improvements, performance enhancements,
+        and new features to make your experience even better.
+    </p>
+
+    <div class="progress-wrapper">
+        <div class="progress-text">DEPLOYMENT IN PROGRESS</div>
+        <div class="progress">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Thank you for your patience • The Dev Team / Aaron
+    </div>
+
+</div>
+
+</body>
+</html>
